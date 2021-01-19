@@ -17,6 +17,7 @@ class MainWindow(QMainWindow):
         self.main_widget = QWidget(self)
 
         player = VideoPlayerWidget()
+        player.open_video(r'C:\Users\chikuwa\Videos\flower.mp4')
 
         layout = vbox([
             player

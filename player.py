@@ -23,6 +23,7 @@ class VideoPlayerWidget(QWidget):
 
         self._video = None
         self._playing = False
+        self._moving_seekbar = False
 
         self.view = GraphicsView()
 
@@ -37,9 +38,9 @@ class VideoPlayerWidget(QWidget):
         self.seekbar = QSlider(Qt.Horizontal)
         self.seekbar.setMinimum(0)
         self.seekbar.setMaximum(0)
-        self.seekbar.valueChanged.connect(
-            self.on_seekbar_valueChanged
-        )
+        self.seekbar.sliderPressed.connect(self.on_seekbar_sliderPressed)
+        self.seekbar.sliderMoved.connect(self.on_seekbar_sliderMoved)
+        self.seekbar.sliderReleased.connect(self.on_seekbar_sliderReleased)
 
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self.fetch_frame)
@@ -84,6 +85,9 @@ class VideoPlayerWidget(QWidget):
 
     def fetch_frame(self):
 
+        if self._moving_seekbar:
+            return
+
         ret, frame = self._video.read()
 
         if not ret:
@@ -104,8 +108,25 @@ class VideoPlayerWidget(QWidget):
         else:
             self.start_video()
 
-    def on_seekbar_valueChanged(self):
+    def on_seekbar_sliderPressed(self):
+
+        if not self.video_is_opened():
+            return
+
+        self._moving_seekbar = True
+
+    def on_seekbar_sliderMoved(self):
         pass
+
+    def on_seekbar_sliderReleased(self):
+
+        if not self.video_is_opened():
+            return
+
+        self._moving_seekbar = False
+        pos = self.seekbar.value()
+        self._video.set(cv2.CAP_PROP_POS_FRAMES, pos)
+        self.fetch_frame()
 
 
 class GraphicsView(QGraphicsView):
