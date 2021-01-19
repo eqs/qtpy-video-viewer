@@ -5,16 +5,53 @@ import numpy as np
 import cv2
 
 from qtpy.QtWidgets import (
-    QLabel, QWidget, QSlider,
+    QPushButton, QLabel, QWidget, QSlider,
     QGraphicsView, QGraphicsScene,
-    QGraphicsPixmapItem
+    QGraphicsPixmapItem, QStyle
 )
 from qtpy.QtCore import QObject, Qt, QPoint
 from qtpy.QtCore import Slot
 from qtpy.QtCore import Signal
 from qtpy.QtGui import QImage, QPixmap, QPainter
 
-from utils import hbox, vbox
+from utils import hbox, vbox, get_standard_icon
+
+
+class VideoPlayerWidget(QWidget):
+    def __init__(self, **kwargs):
+        super(VideoPlayerWidget, self).__init__(**kwargs)
+
+        self.view = GraphicsView()
+        self.view.update_image(
+            np.zeros((100, 100, 3), dtype=np.uint8)
+        )
+
+        self.play_button = QPushButton()
+        self.play_button.setIcon(
+            get_standard_icon(QStyle.SP_MediaPlay)
+        )
+        self.play_button.clicked.connect(
+            self.on_play_button_clicked
+        )
+
+        self.seekbar = QSlider(Qt.Horizontal)
+        self.seekbar.setMinimum(0)
+        self.seekbar.setMaximum(0)
+        self.seekbar.valueChanged.connect(
+            self.on_seekbar_valueChanged
+        )
+
+        layout = vbox([
+            self.view,
+            hbox([self.play_button, self.seekbar])
+        ])
+        self.setLayout(layout)
+
+    def on_play_button_clicked(self):
+        print('clicked')
+
+    def on_seekbar_valueChanged(self):
+        print(self.seekbar.value())
 
 
 class GraphicsView(QGraphicsView):

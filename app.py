@@ -6,6 +6,7 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtCore import QObject, Qt
 
+from player import VideoPlayerWidget
 from utils import vbox
 
 
@@ -15,8 +16,10 @@ class MainWindow(QMainWindow):
 
         self.main_widget = QWidget(self)
 
+        player = VideoPlayerWidget()
+
         layout = vbox([
-            QLabel('Hello, World!')
+            player
         ])
 
         self.main_widget.setLayout(layout)
