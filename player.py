@@ -41,13 +41,16 @@ class VideoPlayerWidget(QWidget):
         self.seekbar.sliderPressed.connect(self.on_seekbar_sliderPressed)
         self.seekbar.sliderMoved.connect(self.on_seekbar_sliderMoved)
         self.seekbar.sliderReleased.connect(self.on_seekbar_sliderReleased)
+        self.seekbar.valueChanged.connect(self.on_seekbar_valueChanged)
+
+        self.nframes_label = QLabel('----- / -----')
 
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self.fetch_frame)
 
         layout = vbox([
             self.view,
-            hbox([self.play_button, self.seekbar])
+            hbox([self.play_button, self.seekbar, self.nframes_label])
         ])
         self.setLayout(layout)
 
@@ -127,6 +130,11 @@ class VideoPlayerWidget(QWidget):
         pos = self.seekbar.value()
         self._video.set(cv2.CAP_PROP_POS_FRAMES, pos)
         self.fetch_frame()
+
+    def on_seekbar_valueChanged(self):
+        curr_pos = self.seekbar.value()
+        nframes = self.seekbar.maximum()
+        self.nframes_label.setText(f'{curr_pos:05d} / {nframes:05d}')
 
 
 class GraphicsView(QGraphicsView):
