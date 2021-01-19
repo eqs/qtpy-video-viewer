@@ -6,6 +6,8 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtCore import QObject, Qt
 
+from utils import vbox
+
 
 class MainWindow(QMainWindow):
     def __init__(self, **kwargs):
@@ -13,8 +15,9 @@ class MainWindow(QMainWindow):
 
         self.main_widget = QWidget(self)
 
-        layout = QVBoxLayout()
-        layout.addWidget(QLabel('Hello, World!'))
+        layout = vbox([
+            QLabel('Hello, World!')
+        ])
 
         self.main_widget.setLayout(layout)
 
