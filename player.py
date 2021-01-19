@@ -9,7 +9,7 @@ from qtpy.QtWidgets import (
     QGraphicsView, QGraphicsScene,
     QGraphicsPixmapItem, QStyle
 )
-from qtpy.QtCore import QObject, Qt, QPoint
+from qtpy.QtCore import QObject, Qt, QPoint, QTimer
 from qtpy.QtCore import Slot
 from qtpy.QtCore import Signal
 from qtpy.QtGui import QImage, QPixmap, QPainter
@@ -21,10 +21,10 @@ class VideoPlayerWidget(QWidget):
     def __init__(self, **kwargs):
         super(VideoPlayerWidget, self).__init__(**kwargs)
 
+        self._video = None
+        self._playing = False
+
         self.view = GraphicsView()
-        self.view.update_image(
-            np.zeros((100, 100, 3), dtype=np.uint8)
-        )
 
         self.play_button = QPushButton()
         self.play_button.setIcon(
@@ -41,17 +41,71 @@ class VideoPlayerWidget(QWidget):
             self.on_seekbar_valueChanged
         )
 
+        self.update_timer = QTimer(self)
+        self.update_timer.timeout.connect(self.fetch_frame)
+
         layout = vbox([
             self.view,
             hbox([self.play_button, self.seekbar])
         ])
         self.setLayout(layout)
 
+    def open_video(self, src_path):
+        self._video = cv2.VideoCapture(src_path)
+
+        if self.video_is_opened():
+            ret, frame = self._video.read()
+            self.view.update_image(frame)
+            self.seekbar.setMaximum(
+                self._video.get(cv2.CAP_PROP_FRAME_COUNT)
+            )
+            return True
+        else:
+            return False
+
+    def video_is_opened(self):
+        return self._video is not None and self._video.isOpened()
+
+    def start_video(self):
+        self._playing = True
+        self.play_button.setIcon(
+            get_standard_icon(QStyle.SP_MediaPause)
+        )
+
+        fps = self._video.get(cv2.CAP_PROP_FPS)
+        self.update_timer.start(1000. / fps)
+
+    def stop_video(self):
+        self._playing = False
+        self.play_button.setIcon(
+            get_standard_icon(QStyle.SP_MediaPlay)
+        )
+        self.update_timer.stop()
+
+    def fetch_frame(self):
+
+        ret, frame = self._video.read()
+
+        if not ret:
+            self.stop_video()
+            return
+
+        self.view.update_image(frame)
+        pos = self._video.get(cv2.CAP_PROP_POS_FRAMES)
+        self.seekbar.setValue(pos)
+
     def on_play_button_clicked(self):
-        print('clicked')
+
+        if not self.video_is_opened():
+            return
+
+        if self._playing:
+            self.stop_video()
+        else:
+            self.start_video()
 
     def on_seekbar_valueChanged(self):
-        print(self.seekbar.value())
+        pass
 
 
 class GraphicsView(QGraphicsView):
